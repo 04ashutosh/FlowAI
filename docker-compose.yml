@@ -1,0 +1,51 @@
+services:
+
+  # ============================================================
+  # FlowAI Internal Metadata Database
+  # This is where FlowAI stores its own state:
+  # users, pipelines, jobs, checkpoints etc.
+  # ============================================================
+  flowai-postgres:
+    image: postgres:16-alpine
+    container_name: flowai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${FLOWAI_DB_NAME:-flowai_db}
+      POSTGRES_USER: ${FLOWAI_DB_USER:-flowai_user}
+      POSTGRES_PASSWORD: ${FLOWAI_DB_PASSWORD:-flowai_local_pass}
+    ports:
+      - "5435:5432"
+    volumes:
+      - flowai_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${FLOWAI_DB_USER:-flowai_user} -d ${FLOWAI_DB_NAME:-flowai_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # Demo Source Database (Phase 7+)
+  # Simulates an external customer database that FlowAI
+  # will replicate FROM. We create it now so it exists.
+  # ============================================================
+  source-postgres:
+    image: postgres:16-alpine
+    container_name: source-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: source_db
+      POSTGRES_USER: source_user
+      POSTGRES_PASSWORD: source_pass
+    ports:
+      - "5436:5432"
+    volumes:
+      - source_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U source_user -d source_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  flowai_postgres_data:
+  source_postgres_data:

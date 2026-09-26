@@ -1,0 +1,24 @@
+# Environment variables - NEVER COMMIT
+.env
+*.env
+
+# Backend build output
+backend/target/
+
+# Frontend build output
+frontend/dist/
+frontend/.angular/
+frontend/node_modules/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
