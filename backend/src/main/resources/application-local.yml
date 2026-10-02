@@ -1,4 +1,12 @@
 spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: flowai-sync-group
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   datasource:
     url: jdbc:postgresql://${FLOWAI_DB_HOST:localhost}:${FLOWAI_DB_PORT:5435}/${FLOWAI_DB_NAME:flowai_db}
     username: ${FLOWAI_DB_USER:flowai_user}
