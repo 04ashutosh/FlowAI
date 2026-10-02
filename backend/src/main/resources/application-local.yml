@@ -27,3 +27,5 @@ application:
     jwt:
       secret-key: local-dev-super-secret-key-at-least-256-bits-long-padding-padding-padding
       expiration-ms: 86400000
+ollama:
+  model: llama3
