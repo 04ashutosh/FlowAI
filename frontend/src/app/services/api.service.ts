@@ -43,4 +43,9 @@ export class ApiService {
   triggerSync(pipelineId: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/sync/${pipelineId}/trigger`, {}, { headers: this.getHeaders() });
   }
+
+  // --- DLQ ---
+  getDlqRecords(pipelineId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/dlq/pipeline/${pipelineId}`, { headers: this.getHeaders() });
+  }
 }
