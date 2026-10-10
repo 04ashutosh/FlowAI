@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-@Component({
+@Component({ standalone: false,
   selector: 'app-root',
   template: '<router-outlet></router-outlet>'
 })

@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiService } from '../services/api.service';
 
-@Component({
+@Component({ standalone: false,
   selector: 'app-login',
   template: `
     <div class="container">
