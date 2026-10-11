@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://flowai-postgres:5432/flowaidb
+    username: flowai_user
+    password: flowai_password
+  kafka:
+    bootstrap-servers: kafka:9092
+
+ollama:
+  url: http://host.docker.internal:11434/api/generate
+  model: llama3
+
+server:
+  port: 8085

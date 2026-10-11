@@ -20,22 +20,22 @@ public class DlqRecord {
     @JsonIgnore
     private Pipeline failedPipeline;
 
-    @Column(name = "target_table", nullable = false)
+    @Column(name = "destination_table_name", nullable = false)
     private String targetTable;
 
-    @Column(name = "json_payload", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "data_payload", nullable = false, columnDefinition = "TEXT")
     private String jsonPayload;
 
-    @Column(name = "failure_reason", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "error_message", nullable = false, columnDefinition = "TEXT")
     private String failureReason;
 
-    @Column(name = "is_resolved", nullable = false)
+    @Column(name = "resolved", nullable = false)
     private boolean isResolved = false;
 
-    @Column(name = "time_created", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant timeCreated;
 
-    @Column(name = "time_updated", nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private Instant timeUpdated;
 
     @PrePersist

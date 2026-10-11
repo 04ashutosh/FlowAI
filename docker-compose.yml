@@ -1,52 +1,23 @@
-services:
+version: '3.8'
 
-  # ============================================================
-  # FlowAI Internal Metadata Database
-  # This is where FlowAI stores its own state:
-  # users, pipelines, jobs, checkpoints etc.
-  # ============================================================
+services:
   flowai-postgres:
     image: postgres:16-alpine
     container_name: flowai-postgres
-    restart: unless-stopped
     environment:
-      POSTGRES_DB: ${FLOWAI_DB_NAME:-flowai_db}
-      POSTGRES_USER: ${FLOWAI_DB_USER:-flowai_user}
-      POSTGRES_PASSWORD: ${FLOWAI_DB_PASSWORD:-flowai_local_pass}
+      POSTGRES_DB: flowaidb
+      POSTGRES_USER: flowai_user
+      POSTGRES_PASSWORD: flowai_password
     ports:
       - "5435:5432"
     volumes:
-      - flowai_postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${FLOWAI_DB_USER:-flowai_user} -d ${FLOWAI_DB_NAME:-flowai_db}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - flowai_pgdata:/var/lib/postgresql/data
+    networks:
+      - flowai-net
 
-  kafka:
-    image: bitnami/kafka:latest
-    container_name: flowai-kafka
-    restart: unless-stopped
-    ports:
-      - "9092:9092"
-    environment:
-      - KAFKA_CFG_NODE_ID=1
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@localhost:9093
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
-
-  # ============================================================
-  # Demo Source Database (Phase 7+)
-  # Simulates an external customer database that FlowAI
-  # will replicate FROM. We create it now so it exists.
-  # ============================================================
   source-postgres:
     image: postgres:16-alpine
     container_name: source-postgres
-    restart: unless-stopped
     environment:
       POSTGRES_DB: source_db
       POSTGRES_USER: source_user
@@ -54,13 +25,58 @@ services:
     ports:
       - "5436:5432"
     volumes:
-      - source_postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U source_user -d source_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - source_pgdata:/var/lib/postgresql/data
+    networks:
+      - flowai-net
+
+  kafka:
+    image: apache/kafka:latest
+    container_name: flowai-kafka
+    ports:
+      - "9094:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    networks:
+      - flowai-net
+
+  backend:
+    build:
+      context: ./backend
+    container_name: flowai-backend
+    ports:
+      - "8085:8085"
+    depends_on:
+      - flowai-postgres
+      - kafka
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - flowai-net
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: flowai-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - flowai-net
 
 volumes:
-  flowai_postgres_data:
-  source_postgres_data:
+  flowai_pgdata:
+  source_pgdata:
+
+networks:
+  flowai-net:
+    driver: bridge
